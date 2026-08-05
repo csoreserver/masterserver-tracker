@@ -1,0 +1,20 @@
+[project]
+name = "cso-py-masterserver-tracker"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Lieutenant Eva Lee",email = "156443123+LieutenantEva@users.noreply.github.com"}
+]
+requires-python = "^3.12"
+dependencies = [
+    "python-dotenv (>=1.2.2,<2.0.0)",
+    "requests (>=2.34.2,<3.0.0)",
+    "watchdog (>=6.0.0,<7.0.0)"
+]
+
+[tool.poetry]
+package-mode = false
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
