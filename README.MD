@@ -7,6 +7,8 @@
   pipx install poetry
   pipx ensurepath
   ```
-  - Re-open the terminal.
+  - Re-open the terminal,
 
-2. Run the shell script: `start.sh`
+2. Copy/Rename file `example.env` to `.env`,
+3. Configure the settings in file `.env`, 
+4. Run the shell script: `start.sh`.
