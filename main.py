@@ -163,7 +163,7 @@ def main ():
     filewatcher.start()
 
     while True:
-        print(f"Checking server status: {environ["CSORSE_MASTERSERVER_IP"]} {environ["CSORSE_MASTERSERVER_PORT"]}")
+        print(f"Checking server status: {environ['CSORSE_MASTERSERVER_IP']} {environ['CSORSE_MASTERSERVER_PORT']}")
         status = check_server()
         print(f"Response: {status}")
         print(f"Send Discord Message: {'New' if 'ms_discord_msg_id' not in DATASTORE else DATASTORE['ms_discord_msg_id']}")
