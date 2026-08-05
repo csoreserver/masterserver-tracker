@@ -1,0 +1,34 @@
+# fly.toml app configuration file generated for csorse-masterserver-tracker on 2026-08-05T10:01:05+07:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = "csorse-masterserver-tracker"
+primary_region = "sin"
+
+[build]
+builder = "paketobuildpacks/builder:base"
+
+[env]
+PORT = "3000"
+PYTHON_DOTENV_DISABLED = "1"
+
+[[mounts]]
+destination = "/data"
+initial_size = "1gb"
+source = "csorse_data"
+
+[[services]]
+auto_start_machines = false
+auto_stop_machines = false
+internal_port = 3_000
+protocol = "tcp"
+
+[[services.ports]]
+port = 3_000
+
+[[vm]]
+cpu_kind = "shared"
+cpus = 1
+memory = "256mb"
+memory_mb = 256
