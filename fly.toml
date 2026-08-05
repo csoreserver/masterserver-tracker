@@ -12,6 +12,9 @@ builder = "paketobuildpacks/builder:base"
 [env]
 PORT = "3000"
 PYTHON_DOTENV_DISABLED = "1"
+CSORSE_MASTERSERVER_TIMEOUT = "5"
+CSORSE_MASTERSERVER_UPDATE_INTERVAL = "30"
+CSORSE_MASTERSERVER_DATASTORE_PATH = "/data/ms_datastore.json"
 
 [[mounts]]
 destination = "/data"
