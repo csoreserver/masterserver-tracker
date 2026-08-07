@@ -56,11 +56,8 @@ def check_server () -> dict:
             ))
             s.settimeout(timeout)
             data = s.recv(1024)
-            if data in [b"~SERVERCONNECTED\n", b"~SERVERCONNECTED\n\x00"]:
-                return  {
-                    "success": True,
-                    "online": True,
-                }
+            if data not in [b"~SERVERCONNECTED\n", b"~SERVERCONNECTED\n\x00"]:
+                raise RuntimeError("Not a master server instance")
         except (ConnectionRefusedError, TimeoutError):
             return  {
                 "success": True,
@@ -72,7 +69,8 @@ def check_server () -> dict:
                 "error": f"{type(error).__name__}: {error}"
             }
     return  {
-        "success": False,
+        "success": True,
+        "online": True,
     }
 
 
@@ -84,7 +82,7 @@ def update_discord (check_result):
     if check_result["success"]:
         status = "🟢Online" if check_result["online"] else "🔴Offline"
     else:
-        status = "⁉️Error"
+        status = f"⁉️Error\n{check_result['error']}"
 
     data=json.dumps({
         "embeds": [
