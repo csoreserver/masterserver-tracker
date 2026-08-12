@@ -91,7 +91,7 @@ def update_discord (check_result):
             "fields": [
                 {
                     "name": "Last Time Checked",
-                    "value": f"<t:{ts_cur}:s>",
+                    "value": f"<t:{ts_cur}:S>",
                     "inline": False
                 },
                 {
