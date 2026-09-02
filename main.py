@@ -194,13 +194,17 @@ class SockRecvForever (threading.Thread):
 def main ():
     global DATASTORE, FILEWATCHER
     signal.signal(signal.SIGINT, signal.default_int_handler)
-    signal.signal(signal.SIGTERM, signal.default_int_handler)
     FILEWATCHER = filewatch_init()
 
     def send_status_and_store (*args, **kwargs):
         response = update_discord(*args, **kwargs)
         DATASTORE["ms_discord_msg_id"] = response["id"]
         save_datastore()
+
+    def sigterm_handler (*args, **kwargs):
+        send_status_and_store(Status.EXIT)
+        return signal.default_int_handler(*args, **kwargs)
+    signal.signal(signal.SIGTERM, sigterm_handler)
 
     send_status_and_store()
 
