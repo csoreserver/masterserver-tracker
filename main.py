@@ -213,35 +213,40 @@ def main ():
 
     try:
         while True:
-            send_status_and_store(Status.IDLE)
-            print(f"Checking server status: {environ['CSORSE_MASTERSERVER_IP']} {environ['CSORSE_MASTERSERVER_PORT']}")
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                try:
-                    send_status_and_store(Status.CONNECTING)
-                    s.settimeout(timeout)
-                    s.connect((
-                        environ["CSORSE_MASTERSERVER_IP"],
-                        int(environ["CSORSE_MASTERSERVER_PORT"])
-                    ))
-                    s.settimeout(timeout)
-                    data = s.recv(1024)
-                    if data not in [b"~SERVERCONNECTED\n", b"~SERVERCONNECTED\n\x00"]:
-                        raise RuntimeError("Not a master server instance")
-                    send_status_and_store(Status.CONNECTED)
-                    if not sock_thread:
-                        sock_thread = SockRecvForever(s, daemon=True)
-                        sock_thread.start()
-                    sock_thread.join()
-                    if sock_thread.exc:
-                        raise sock_thread.exc
-                except (ConnectionRefusedError, TimeoutError, ConnectionResetError):
-                    send_status_and_store(Status.DISCONNECTED)
-                except Exception as error:
-                    send_status_and_store(Status.ERROR, f"{type(error).__name__}: {error}")
-                finally:
-                    sock_thread = None
-            save_datastore()
             interval = float(environ["CSORSE_MASTERSERVER_UPDATE_INTERVAL"])
+            if int(environ["CSORSE_MASTERSERVER_SLEEP_MODE"]):
+                print("Sleep mode is active")
+                interval = float(environ["CSORSE_MASTERSERVER_SLEEP_UPDATE_INTERVAL"])
+                send_status_and_store(Status.EXIT)
+            else:
+                send_status_and_store(Status.IDLE)
+                print(f"Checking server status: {environ['CSORSE_MASTERSERVER_IP']} {environ['CSORSE_MASTERSERVER_PORT']}")
+                with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+                    try:
+                        send_status_and_store(Status.CONNECTING)
+                        s.settimeout(timeout)
+                        s.connect((
+                            environ["CSORSE_MASTERSERVER_IP"],
+                            int(environ["CSORSE_MASTERSERVER_PORT"])
+                        ))
+                        s.settimeout(timeout)
+                        data = s.recv(1024)
+                        if data not in [b"~SERVERCONNECTED\n", b"~SERVERCONNECTED\n\x00"]:
+                            raise RuntimeError("Not a master server instance")
+                        send_status_and_store(Status.CONNECTED)
+                        if not sock_thread:
+                            sock_thread = SockRecvForever(s, daemon=True)
+                            sock_thread.start()
+                        sock_thread.join()
+                        if sock_thread.exc:
+                            raise sock_thread.exc
+                    except (ConnectionRefusedError, TimeoutError, ConnectionResetError):
+                        send_status_and_store(Status.DISCONNECTED)
+                    except Exception as error:
+                        send_status_and_store(Status.ERROR, f"{type(error).__name__}: {error}")
+                    finally:
+                        sock_thread = None
+                save_datastore()
             print(f"Sleep for {interval} second(s)")
             print(f"==============================")
             time.sleep(interval)
