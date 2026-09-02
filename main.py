@@ -194,6 +194,7 @@ class SockRecvForever (threading.Thread):
 def main ():
     global DATASTORE, FILEWATCHER
     signal.signal(signal.SIGINT, signal.default_int_handler)
+    signal.signal(signal.SIGTERM, signal.default_int_handler)
     FILEWATCHER = filewatch_init()
 
     def send_status_and_store (*args, **kwargs):
