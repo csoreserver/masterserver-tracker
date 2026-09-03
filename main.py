@@ -191,10 +191,12 @@ class SockRecvForever (threading.Thread):
         self.exc: BaseException = None
 
     def run (self):
+        buf = bytearray(PACKETSTEAM_BUFFER)
         while s := self.sock:
             try:
                 s.setblocking(True)
                 s.send(PACKETSTEAM_BUFFER)
+                buf[1] = (buf[1] + 1) & 0xFF
                 time.sleep(2.5)
             except (BaseException,) as exc:
                 self.exc = exc
