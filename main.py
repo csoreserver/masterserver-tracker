@@ -195,7 +195,7 @@ class SockRecvForever (threading.Thread):
         while s := self.sock:
             try:
                 s.setblocking(True)
-                s.send(PACKETSTEAM_BUFFER)
+                s.send(buf)
                 buf[1] = (buf[1] + 1) & 0xFF
                 time.sleep(2.5)
             except (BaseException,) as exc:
