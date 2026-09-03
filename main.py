@@ -197,8 +197,9 @@ class SockRecvForever (threading.Thread):
                 s.setblocking(True)
                 s.send(buf)
                 buf[1] = (buf[1] + 1) & 0xFF
-                s.recv(8192)
-                time.sleep(2.5)
+                if resp := s.recv(8192):
+                    print(f"Server response: {resp}")
+                time.sleep(1)
             except (BaseException,) as exc:
                 self.exc = exc
                 break
@@ -253,7 +254,7 @@ def main ():
                         sock_thread.join()
                         if sock_thread.exc:
                             raise sock_thread.exc
-                    except (ConnectionRefusedError, socket.timeout, ConnectionResetError) as exc:
+                    except (ConnectionRefusedError, socket.timeout, ConnectionResetError, BrokenPipeError) as exc:
                         print(f"Disconnected. Reason: {exc}")
                         send_status_and_store(Status.DISCONNECTED)
                     except Exception as error:
