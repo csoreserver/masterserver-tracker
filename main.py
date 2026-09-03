@@ -194,10 +194,9 @@ class SockRecvForever (threading.Thread):
         self.exc: BaseException = None
 
     def run (self):
-        s = self.sock
-        while s:
+        while s := self.sock:
             try:
-                s.settimeout(None)
+                s.setblocking(True)
                 s.recv(DEFAULT_BUFFER_SIZE)
             except (BaseException,) as exc:
                 self.exc = exc
