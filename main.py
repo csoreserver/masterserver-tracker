@@ -197,6 +197,7 @@ class SockRecvForever (threading.Thread):
                 s.setblocking(True)
                 s.send(buf)
                 buf[1] = (buf[1] + 1) & 0xFF
+                s.recv(8192)
                 time.sleep(2.5)
             except (BaseException,) as exc:
                 self.exc = exc
