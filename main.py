@@ -183,6 +183,7 @@ def update_discord (status: Status = Status.UNKNOWN, error: str = ""):
     return r.json()
 
 
+PACKETSTEAM_BUFFER: bytes = b'U\x01\x00\x01\xC0'
 class SockRecvForever (threading.Thread):
     def __init__ (self, s: socket.socket, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -193,7 +194,8 @@ class SockRecvForever (threading.Thread):
         while s := self.sock:
             try:
                 s.setblocking(True)
-                s.recv(1)
+                s.send(PACKETSTEAM_BUFFER)
+                time.sleep(2.5)
             except (BaseException,) as exc:
                 self.exc = exc
                 break
@@ -243,15 +245,16 @@ def main ():
                         if data not in [b"~SERVERCONNECTED\n", b"~SERVERCONNECTED\n\x00"]:
                             raise RuntimeError("Not a master server instance")
                         send_status_and_store(Status.CONNECTED)
-                        if not sock_thread:
-                            sock_thread = SockRecvForever(s, daemon=True)
-                            sock_thread.start()
+                        sock_thread = SockRecvForever(s, daemon=True)
+                        sock_thread.start()
                         sock_thread.join()
                         if sock_thread.exc:
                             raise sock_thread.exc
-                    except (ConnectionRefusedError, TimeoutError, ConnectionResetError):
+                    except (ConnectionRefusedError, socket.timeout, ConnectionResetError) as exc:
+                        print(f"Disconnected. Reason: {exc}")
                         send_status_and_store(Status.DISCONNECTED)
                     except Exception as error:
+                        print(f"Error: {error}")
                         send_status_and_store(Status.ERROR, f"{type(error).__name__}: {error}")
                     finally:
                         sock_thread = None
