@@ -1,4 +1,3 @@
-import signal
 import enum
 import threading
 import socket
@@ -7,9 +6,6 @@ import pathlib
 import json
 from os import (
     environ,
-)
-from io import (
-    DEFAULT_BUFFER_SIZE,
 )
 import dotenv
 import requests
@@ -197,7 +193,7 @@ class SockRecvForever (threading.Thread):
         while s := self.sock:
             try:
                 s.setblocking(True)
-                s.recv(DEFAULT_BUFFER_SIZE)
+                s.recv(1)
             except (BaseException,) as exc:
                 self.exc = exc
                 break
@@ -205,6 +201,7 @@ class SockRecvForever (threading.Thread):
 
 def main ():
     global DATASTORE, FILEWATCHER
+    import signal
     signal.signal(signal.SIGINT, signal.default_int_handler)
     FILEWATCHER = filewatch_init()
 
