@@ -146,7 +146,7 @@ def update_discord (status: Status = Status.UNKNOWN, error: str = ""):
         ds_field_timestamp["value"] = CONN_FMT.format(timestamp=ts_last)
         DATASTORE["ms_conn_last_time"] = ts_last
 
-    if status not in [Status.CONNECTING, Status.CONNECTED, Status.EXIT]:
+    if status not in [Status.IDLE, Status.CONNECTING, Status.CONNECTED, Status.EXIT]:
         ts_next = int(time.time() // 1) + int(environ["CSORSE_MASTERSERVER_UPDATE_INTERVAL"])
         ds_fields.append({
             "name": "Next Retry Time",
