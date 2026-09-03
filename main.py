@@ -96,6 +96,11 @@ def update_discord (status: Status = Status.UNKNOWN, error: str = ""):
         "title": "CSO Re-Server Master Server Tracker",
         "fields": [
             {
+                "name": "Name",
+                "value": "",
+                "inline": True
+            },
+            {
                 "name": "Last Time Connected",
                 "value": "None",
                 "inline": False
@@ -108,7 +113,15 @@ def update_discord (status: Status = Status.UNKNOWN, error: str = ""):
         ],
     }
     ds_fields = ds_embed["fields"]
-    ds_field_status = ds_fields[1]
+    ds_field_name = ds_fields[0]
+    ds_field_timestamp = ds_fields[1]
+    ds_field_status = ds_fields[2]
+
+    ms_name = environ["CSORSE_MASTERSERVER_NAME"]
+    if not ms_name:
+        ds_fields.remove(ds_field_name)
+    else:
+        ds_field_name["name"] = ms_name
 
     ts_last: int = int(DATASTORE.get("ms_conn_last_time", 0))
 
@@ -130,7 +143,7 @@ def update_discord (status: Status = Status.UNKNOWN, error: str = ""):
             ds_field_status["value"] = "❓Unknown"
 
     if ts_last:
-        ds_fields[0]["value"] = CONN_FMT.format(timestamp=ts_last)
+        ds_field_timestamp["value"] = CONN_FMT.format(timestamp=ts_last)
         DATASTORE["ms_conn_last_time"] = ts_last
 
     if status not in [Status.CONNECTING, Status.CONNECTED, Status.EXIT]:
