@@ -200,7 +200,9 @@ class SockRecvForever (threading.Thread):
                 buf[1] = (buf[1] + 1) & 0xFF
                 if resp := s.recv(8192):
                     print(f"Socket recv: {resp.hex(" ")}")
-                time.sleep(20)
+                pingtime = float(environ["CSORSE_MASTERSERVER_PING_INTERVAL"])
+                print(f"Next ping in {pingtime} second(s)")
+                time.sleep(pingtime)
             except (BaseException,) as exc:
                 self.exc = exc
                 break
