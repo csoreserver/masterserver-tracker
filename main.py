@@ -183,7 +183,7 @@ def update_discord (status: Status = Status.UNKNOWN, error: str = ""):
     return r.json()
 
 
-PING_BUFFER: bytes = b'U\x01\x01\x00\x0A'
+PING_BUFFER: bytes = b"U\x01\x01\x00\x0A"
 class SockRecvForever (threading.Thread):
     def __init__ (self, s: socket.socket, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -195,11 +195,11 @@ class SockRecvForever (threading.Thread):
         while s := self.sock:
             try:
                 s.setblocking(True)
-                print(f"Socket send: {buf}")
+                print(f"Socket send: {buf.hex(" ")}")
                 s.sendall(buf)
                 buf[1] = (buf[1] + 1) & 0xFF
                 if resp := s.recv(8192):
-                    print(f"Socket recv: {resp}")
+                    print(f"Socket recv: {resp.hex(" ")}")
                 time.sleep(20)
             except (BaseException,) as exc:
                 self.exc = exc
