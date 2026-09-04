@@ -183,7 +183,7 @@ def update_discord (status: Status = Status.UNKNOWN, error: str = ""):
     return r.json()
 
 
-PACKETSTEAM_BUFFER: bytes = b'U\x01\x00\x01\xC0'
+PACKETSTEAM_BUFFER: bytes = b'U\x01\x01\x00\xC0'
 class SockRecvForever (threading.Thread):
     def __init__ (self, s: socket.socket, *args, **kwargs):
         super().__init__(*args, **kwargs)
