@@ -94,7 +94,7 @@ def update_discord (status: Status = Status.UNKNOWN, error: str = ""):
             {
                 "name": "Name",
                 "value": "",
-                "inline": True
+                "inline": False
             },
             {
                 "name": "Last Time Connected",
@@ -118,6 +118,8 @@ def update_discord (status: Status = Status.UNKNOWN, error: str = ""):
         ds_fields.remove(ds_field_name)
     else:
         ds_field_name["name"] = ms_name
+        if (int(environ["CSORSE_MASTERSERVER_SHOW_ADDRESS"])):
+            ds_field_name["value"] = f"`{environ['CSORSE_MASTERSERVER_IP']}:{environ['CSORSE_MASTERSERVER_PORT']}`"
 
     ts_last: int = int(DATASTORE.get("ms_conn_last_time", 0))
 
