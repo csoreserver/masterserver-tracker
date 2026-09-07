@@ -185,6 +185,7 @@ def update_discord (status: Status = Status.UNKNOWN, error: str = ""):
     return r.json()
 
 
+kill_thread = threading.Event()
 PING_BUFFER: bytes = b"U\x01\x01\x00\x0A"
 class SockRecvForever (threading.Thread):
     def __init__ (self, s: socket.socket, *args, **kwargs):
@@ -193,8 +194,9 @@ class SockRecvForever (threading.Thread):
         self.exc: BaseException = None
 
     def run (self):
+        s = self.sock
         buf = bytearray(PING_BUFFER)
-        while s := self.sock:
+        while not kill_thread.is_set():
             try:
                 s.setblocking(True)
                 print(f"Socket send: {buf.hex(" ")}")
@@ -202,12 +204,12 @@ class SockRecvForever (threading.Thread):
                 buf[1] = (buf[1] + 1) & 0xFF
                 if resp := s.recv(8192):
                     print(f"Socket recv: {resp.hex(" ")}")
-                pingtime = float(environ["CSORSE_MASTERSERVER_PING_INTERVAL"])
-                print(f"Next ping in {pingtime} second(s)")
-                time.sleep(pingtime)
             except (BaseException,) as exc:
                 self.exc = exc
                 break
+            pingtime = float(environ["CSORSE_MASTERSERVER_PING_INTERVAL"])
+            print(f"Next ping in {pingtime} second(s)")
+            time.sleep(pingtime)
 
 
 def main ():
@@ -253,6 +255,7 @@ def main ():
                         data = s.recv(1024)
                         if data not in [b"~SERVERCONNECTED\n", b"~SERVERCONNECTED\n\x00"]:
                             raise RuntimeError("Not a master server instance")
+                        kill_thread.clear()
                         send_status_and_store(Status.CONNECTED)
                         sock_thread = SockRecvForever(s, daemon=True)
                         sock_thread.start()
@@ -266,6 +269,7 @@ def main ():
                         print(f"Error: {error}")
                         send_status_and_store(Status.ERROR, f"{type(error).__name__}: {error}")
                     finally:
+                        kill_thread.set()
                         sock_thread = None
                 save_datastore()
             print(f"Sleep for {interval} second(s)")
