@@ -202,6 +202,7 @@ class SockRecvForever (threading.Thread):
                 print(f"Socket send: {buf.hex(" ")}")
                 s.sendall(buf)
                 buf[1] = (buf[1] + 1) & 0xFF
+                s.settimeout(15)
                 if resp := s.recv(8192):
                     print(f"Socket recv: {resp.hex(" ")}")
             except (BaseException,) as exc:
