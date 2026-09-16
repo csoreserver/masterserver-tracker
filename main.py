@@ -205,6 +205,8 @@ class SockRecvForever (threading.Thread):
                 s.settimeout(15)
                 if resp := s.recv(8192):
                     print(f"Socket recv: {resp.hex(" ")}")
+                else:
+                    raise BrokenPipeError("recv is empty")
             except (BaseException,) as exc:
                 self.exc = exc
                 break
