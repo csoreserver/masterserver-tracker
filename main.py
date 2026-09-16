@@ -186,7 +186,7 @@ def update_discord (status: Status = Status.UNKNOWN, error: str = ""):
 
 
 kill_thread = threading.Event()
-PING_BUFFER: bytes = b"U\x01\x01\x00\x0A"
+PING_BUFFER: bytes = b"U\x01\x01\x00\xFF"
 class SockRecvForever (threading.Thread):
     def __init__ (self, s: socket.socket, *args, **kwargs):
         super().__init__(*args, **kwargs)
