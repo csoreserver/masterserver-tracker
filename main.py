@@ -188,21 +188,23 @@ def update_discord (status: Status = Status.UNKNOWN, error: str = ""):
 kill_thread = threading.Event()
 PING_BUFFER: bytes = b"U\x01\x01\x00\xFF"
 class SockRecvForever (threading.Thread):
-    def __init__ (self, s: socket.socket, *args, **kwargs):
+    def __init__ (self, s: socket.socket, *args, timeout: int, **kwargs):
         super().__init__(*args, **kwargs)
         self.sock = s
         self.exc: BaseException = None
+        self.timeout = timeout
 
     def run (self):
         s = self.sock
         buf = bytearray(PING_BUFFER)
+        time.sleep(3.0)
         while not kill_thread.is_set():
             try:
                 s.setblocking(True)
                 print(f"Socket send: {buf.hex(" ")}")
                 s.sendall(buf)
                 buf[1] = (buf[1] + 1) & 0xFF
-                s.settimeout(15)
+                s.settimeout(self.timeout)
                 if resp := s.recv(8192):
                     print(f"Socket recv: {resp.hex(" ")}")
                 else:
@@ -260,7 +262,7 @@ def main ():
                             raise RuntimeError("Not a master server instance")
                         kill_thread.clear()
                         send_status_and_store(Status.CONNECTED)
-                        sock_thread = SockRecvForever(s, daemon=True)
+                        sock_thread = SockRecvForever(s, timeout=timeout, daemon=True)
                         sock_thread.start()
                         sock_thread.join()
                         if sock_thread.exc:
