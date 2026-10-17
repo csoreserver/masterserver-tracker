@@ -272,7 +272,7 @@ def main ():
                         send_status_and_store(Status.DISCONNECTED)
                     except Exception as error:
                         print(f"Error: {error}")
-                        send_status_and_store(Status.ERROR, f"{type(error).__name__}: {error}")
+                        send_status_and_store(Status.ERROR, f"{type(error).__name__}")
                     finally:
                         kill_thread.set()
                         sock_thread = None
