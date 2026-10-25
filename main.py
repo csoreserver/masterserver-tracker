@@ -1,3 +1,6 @@
+from typing import override
+from typing import Any
+from collections.abc import Callable
 import enum
 import threading
 import socket
@@ -13,16 +16,13 @@ from watchdog.events import (
     FileSystemEventHandler,
     FileModifiedEvent,
 )
-from watchdog.observers.api import (
-    ObservedWatch,
-)
 from watchdog.observers import (
     Observer,
 )
 
 
 
-DATASTORE = {}
+DATASTORE: dict[str, Any] = {}
 DATASTORE_PATH = "datastore.json"
 def load_datastore ():
     global DATASTORE
@@ -44,6 +44,13 @@ def save_datastore ():
         FILEWATCHER.schedule(ModifiedHandler(), "./", recursive=False)
 
 
+LOCALE: dict[str, str] = {}
+LOCALE_PATH = "locale.json"
+def load_locale ():
+    global LOCALE
+    LOCALE = json.load(open(LOCALE_PATH, 'r'))
+
+
 CONFIG_PATH = ".env"
 def load_config ():
     global DATASTORE_PATH
@@ -51,22 +58,26 @@ def load_config ():
     DATASTORE_PATH = environ["CSORSE_MASTERSERVER_DATASTORE_PATH"]
 
 
+_FILES: dict[pathlib.Path, Callable[[],None]] = {
+    pathlib.Path(CONFIG_PATH).resolve(False): load_config,
+    pathlib.Path(DATASTORE_PATH).resolve(False): load_datastore,
+    pathlib.Path(LOCALE_PATH).resolve(False): load_locale,
+}
+
 class ModifiedHandler (FileSystemEventHandler):
+    @override
     def on_modified(self, event: FileModifiedEvent):
         if type(event) is not FileModifiedEvent:
             return
         src_path = pathlib.Path(event.src_path).resolve(False)
-        if src_path == pathlib.Path(CONFIG_PATH).resolve(False):
-            print(f"{CONFIG_PATH} has been modified. Reload now...")
-            load_config()
-        elif src_path == pathlib.Path(DATASTORE_PATH).resolve(False):
-            print(f"{DATASTORE_PATH} has been modified. Reload now...")
-            load_datastore()
+        if src_path in _FILES:
+            print(f"{src_path.name} has been modified. Reload now...")
+            _FILES[src_path]()
 
 FILEWATCHER: Observer = None
 def filewatch_init ():
-    load_config()
-    load_datastore()
+    for v in _FILES.values():
+        v()
 
     filewatcher = Observer()
     filewatcher.schedule(ModifiedHandler(), "./", recursive=False)
@@ -89,20 +100,20 @@ def update_discord (status: Status = Status.UNKNOWN, error: str = ""):
     global DATASTORE
     print(f"Send status: {status.name}")
     ds_embed = {
-        "title": "CSO Re-Server Master Server Tracker",
+        "title": LOCALE.get("EMBED_TITLE", "EMBED_TITLE"),
         "fields": [
             {
-                "name": "Name",
+                "name": LOCALE.get("EMBED_FIELD_NAME", "EMBED_FIELD_NAME"),
                 "value": "",
                 "inline": False
             },
             {
-                "name": "Last Time Connected",
+                "name": LOCALE.get("EMBED_FIELD_LTC", "EMBED_FIELD_LTC"),
                 "value": "None",
                 "inline": False
             },
             {
-                "name": "Status",
+                "name": LOCALE.get("EMBED_FIELD_STATUS", "EMBED_FIELD_STATUS"),
                 "value": "❓Unknown",
                 "inline": False
             },
@@ -123,22 +134,12 @@ def update_discord (status: Status = Status.UNKNOWN, error: str = ""):
 
     ts_last: int = int(DATASTORE.get("ms_conn_last_time", 0))
 
-    match status:
-        case Status.IDLE:
-            ds_field_status["value"] = "🟡Idle"
-        case Status.CONNECTING:
-            ds_field_status["value"] = "🔄Connecting"
-        case Status.CONNECTED:
-            ds_field_status["value"] = "🟢Connected"
-            ts_last = int(time.time() // 1)
-        case Status.DISCONNECTED:
-            ds_field_status["value"] = "🔴Disconnected"
-        case Status.ERROR:
-            ds_field_status["value"] = f"⁉️Error\n{error}"
-        case Status.EXIT:
-            ds_field_status["value"] = f"💤Sleep"
-        case _:
-            ds_field_status["value"] = "❓Unknown"
+    status_txt = LOCALE.get(f"STATUS_{status.name}", status.name)
+    if status == Status.ERROR:
+        status_txt += f"\n{error}"
+    ds_field_status["value"] = status_txt
+    if status == Status.CONNECTED:
+        ts_last = int(time.time() // 1)
 
     if ts_last:
         ds_field_timestamp["value"] = CONN_FMT.format(timestamp=ts_last)
@@ -194,6 +195,7 @@ class SockRecvForever (threading.Thread):
         self.exc: BaseException = None
         self.timeout = timeout
 
+    @override
     def run (self):
         s = self.sock
         buf = bytearray(PING_BUFFER)

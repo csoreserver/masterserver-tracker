@@ -1,0 +1,13 @@
+{
+    "EMBED_TITLE":          "Master Server Tracker",
+    "EMBED_FIELD_NAME":     "Name",
+    "EMBED_FIELD_LTC":      "Last Time Connected",
+    "EMBED_FIELD_STATUS":   "Status",
+    "STATUS_UNKNOWN":       "❓Unknown",
+    "STATUS_IDLE":          "🟡Idle",
+    "STATUS_CONNECTING":    "🔄Connecting",
+    "STATUS_CONNECTED":     "🟢Connected",
+    "STATUS_DISCONNECTED":  "🔴Disconnected",
+    "STATUS_ERROR":         "⁉️Error",
+    "STATUS_EXIT":          "💤Sleep"
+}
