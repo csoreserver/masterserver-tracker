@@ -96,7 +96,7 @@ class Status (enum.Enum):
 
 
 CONN_FMT = "<t:{timestamp}:S>"
-def update_discord (status: Status = Status.UNKNOWN, error: str = ""):
+def update_discord (status: Status = Status.UNKNOWN, *, error: str = "", laps: int = 0):
     global DATASTORE
     print(f"Send status: {status.name}")
     ds_embed = {
@@ -117,12 +117,18 @@ def update_discord (status: Status = Status.UNKNOWN, error: str = ""):
                 "value": "❓Unknown",
                 "inline": False
             },
+            {
+                "name": LOCALE.get("EMBED_FIELD_LAPS", "EMBED_FIELD_LAPS"),
+                "value": str(laps),
+                "inline": False
+            },
         ],
     }
     ds_fields = ds_embed["fields"]
     ds_field_name = ds_fields[0]
     ds_field_timestamp = ds_fields[1]
     ds_field_status = ds_fields[2]
+    ds_field_laps = ds_fields[3]
 
     ms_name = environ["CSORSE_MASTERSERVER_NAME"]
     if not ms_name:
@@ -140,6 +146,8 @@ def update_discord (status: Status = Status.UNKNOWN, error: str = ""):
     ds_field_status["value"] = status_txt
     if status == Status.CONNECTED:
         ts_last = int(time.time() // 1)
+    else:
+        ds_fields.remove(ds_field_laps)
 
     if ts_last:
         ds_field_timestamp["value"] = CONN_FMT.format(timestamp=ts_last)
@@ -186,6 +194,13 @@ def update_discord (status: Status = Status.UNKNOWN, error: str = ""):
     return r.json()
 
 
+def send_status_and_store (*args, **kwargs):
+    global DATASTORE
+    response = update_discord(*args, **kwargs)
+    DATASTORE["ms_discord_msg_id"] = response["id"]
+    save_datastore()
+
+
 kill_thread = threading.Event()
 PING_BUFFER: bytes = b"U\x01\x01\x00\xFF"
 class SockRecvForever (threading.Thread):
@@ -194,6 +209,7 @@ class SockRecvForever (threading.Thread):
         self.sock = s
         self.exc: BaseException = None
         self.timeout = timeout
+        self.laps = 0
 
     @override
     def run (self):
@@ -209,6 +225,16 @@ class SockRecvForever (threading.Thread):
                 s.settimeout(self.timeout)
                 if resp := s.recv(8192):
                     print(f"Socket recv: {resp.hex(" ")}")
+                    if buf[1] == 0xFF:
+                        self.laps += 1
+                        threading.Thread(
+                            daemon=True,
+                            target=send_status_and_store,
+                            kwargs={
+                                "status": Status.CONNECTED,
+                                "laps": self.laps,
+                            },
+                        ).start()
                 else:
                     raise BrokenPipeError("recv is empty")
             except (BaseException,) as exc:
@@ -220,15 +246,10 @@ class SockRecvForever (threading.Thread):
 
 
 def main ():
-    global DATASTORE, FILEWATCHER
+    global FILEWATCHER
     import signal
     signal.signal(signal.SIGINT, signal.default_int_handler)
     FILEWATCHER = filewatch_init()
-
-    def send_status_and_store (*args, **kwargs):
-        response = update_discord(*args, **kwargs)
-        DATASTORE["ms_discord_msg_id"] = response["id"]
-        save_datastore()
 
     def sigterm_handler (*args, **kwargs):
         send_status_and_store(Status.EXIT)
@@ -274,7 +295,7 @@ def main ():
                         send_status_and_store(Status.DISCONNECTED)
                     except Exception as error:
                         print(f"Error: {error}")
-                        send_status_and_store(Status.ERROR, f"{type(error).__name__}")
+                        send_status_and_store(Status.ERROR, error=f"{type(error).__name__}")
                     finally:
                         kill_thread.set()
                         sock_thread = None

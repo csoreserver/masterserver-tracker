@@ -3,6 +3,7 @@
     "EMBED_FIELD_NAME":     "Name",
     "EMBED_FIELD_LTC":      "Last Time Connected",
     "EMBED_FIELD_STATUS":   "Status",
+    "EMBED_FIELD_LAPS":     "Laps Passed",
     "STATUS_UNKNOWN":       "❓Unknown",
     "STATUS_IDLE":          "🟡Idle",
     "STATUS_CONNECTING":    "🔄Connecting",
