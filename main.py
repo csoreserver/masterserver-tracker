@@ -145,7 +145,8 @@ def update_discord (status: Status = Status.UNKNOWN, *, error: str = "", laps: i
         status_txt += f"\n{error}"
     ds_field_status["value"] = status_txt
     if status == Status.CONNECTED:
-        ts_last = int(time.time() // 1)
+        if laps == 0:
+            ts_last = int(time.time() // 1)
     else:
         ds_fields.remove(ds_field_laps)
 
